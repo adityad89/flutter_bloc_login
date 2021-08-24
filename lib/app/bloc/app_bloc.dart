@@ -18,12 +18,18 @@ class AppBloc extends Bloc<AppEvent, AppState> {
               : const AppState.unauthenticated(),
         ) {
     _userSubscription = _authenticationRepository.user.listen(_onUserChanged);
+    _verificationIdSubscription = _authenticationRepository.verificationId
+        .listen(_onverificationIdChanged);
   }
 
   final AuthenticationRepository _authenticationRepository;
   late final StreamSubscription<User> _userSubscription;
+  late final StreamSubscription<String> _verificationIdSubscription;
 
   void _onUserChanged(User user) => add(AppUserChanged(user));
+
+  void _onverificationIdChanged(String verificationId) =>
+      add(VerificationIdChanged(verificationId));
 
   @override
   Stream<AppState> mapEventToState(AppEvent event) async* {
@@ -31,6 +37,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       yield _mapUserChangedToState(event, state);
     } else if (event is AppLogoutRequested) {
       unawaited(_authenticationRepository.logOut());
+    } else if (event is VerificationIdChanged) {
+      yield _mapVerificationIdChangedToState(event, state);
     }
   }
 
@@ -40,9 +48,17 @@ class AppBloc extends Bloc<AppEvent, AppState> {
         : const AppState.unauthenticated();
   }
 
+  AppState _mapVerificationIdChangedToState(
+      VerificationIdChanged event, AppState state) {
+    return event.verificationId.isNotEmpty
+        ? AppState.otpVerification(event.verificationId)
+        : const AppState.unauthenticated();
+  }
+
   @override
   Future<void> close() {
     _userSubscription.cancel();
+    _verificationIdSubscription.cancel();
     return super.close();
   }
 }

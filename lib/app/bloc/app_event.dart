@@ -9,6 +9,16 @@ abstract class AppEvent extends Equatable {
 
 class AppLogoutRequested extends AppEvent {}
 
+class VerificationIdChanged extends AppEvent {
+  @visibleForTesting
+  const VerificationIdChanged(this.verificationId);
+
+  final String verificationId;
+
+  @override
+  List<Object> get props => [verificationId];
+}
+
 class AppUserChanged extends AppEvent {
   @visibleForTesting
   const AppUserChanged(this.user);

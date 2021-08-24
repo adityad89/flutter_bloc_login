@@ -4,27 +4,28 @@ import 'package:flutter_bloc_login/authentication_repository.dart';
 import 'package:flutter_bloc_login/form_inputs.dart';
 import 'package:formz/formz.dart';
 
-part 'login_state.dart';
+part 'otpVerify_state.dart';
 
-class LoginCubit extends Cubit<LoginState> {
-  LoginCubit(this._authenticationRepository) : super(const LoginState());
+class OtpVerifyCubit extends Cubit<OtpVerifyState> {
+  OtpVerifyCubit(this._authenticationRepository)
+      : super(const OtpVerifyState());
 
   final AuthenticationRepository _authenticationRepository;
 
-  void phoneNumberChanged(String value) {
-    final phoneNumber = PhoneNumber.dirty(value);
+  void otpChanged(String value) {
+    final smsCode = OtpCode.dirty(value);
     emit(state.copyWith(
-      phoneNumber: phoneNumber,
-      status: Formz.validate([phoneNumber]),
+      smsCode: smsCode,
+      status: Formz.validate([smsCode]),
     ));
   }
 
-  Future<void> logInWithPhoneNumber() async {
+  Future<void> logInWithOtp(String verificationId) async {
     if (!state.status.isValidated) return;
     emit(state.copyWith(status: FormzStatus.submissionInProgress));
     try {
-      await _authenticationRepository.logInWithPhoneNumber(
-          phoneNumber: state.phoneNumber.value);
+      await _authenticationRepository.logInWithOtp(
+          verificationId: verificationId, smsCode: state.smsCode.value);
       emit(state.copyWith(status: FormzStatus.submissionSuccess));
     } on Exception {
       emit(state.copyWith(status: FormzStatus.submissionFailure));

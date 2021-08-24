@@ -26,11 +26,9 @@ class SignUpForm extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _EmailInput(),
+                _NameInput(),
                 const SizedBox(height: 8.0),
-                _PasswordInput(),
-                const SizedBox(height: 8.0),
-                _ConfirmPasswordInput(),
+                _PhoneNumberInput(),
                 const SizedBox(height: 8.0),
                 _SignUpButton(),
               ],
@@ -40,20 +38,20 @@ class SignUpForm extends StatelessWidget {
   }
 }
 
-class _EmailInput extends StatelessWidget {
+class _NameInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<SignUpCubit, SignUpState>(
-      buildWhen: (previous, current) => previous.email != current.email,
+      buildWhen: (previous, current) => previous.name != current.name,
       builder: (context, state) {
         return TextField(
-          key: const Key('signUpForm_emailInput_textField'),
-          onChanged: (email) => context.read<SignUpCubit>().emailChanged(email),
-          keyboardType: TextInputType.emailAddress,
+          key: const Key('signUpForm_nameInput_textField'),
+          onChanged: (name) => context.read<SignUpCubit>().nameChanged(name),
+          keyboardType: TextInputType.name,
           decoration: InputDecoration(
-            labelText: 'email',
+            labelText: 'Name',
             helperText: '',
-            errorText: state.email.invalid ? 'invalid email' : null,
+            errorText: state.name.invalid ? 'enter name' : null,
           ),
         );
       },
@@ -61,48 +59,23 @@ class _EmailInput extends StatelessWidget {
   }
 }
 
-class _PasswordInput extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<SignUpCubit, SignUpState>(
-      buildWhen: (previous, current) => previous.password != current.password,
-      builder: (context, state) {
-        return TextField(
-          key: const Key('signUpForm_passwordInput_textField'),
-          onChanged: (password) =>
-              context.read<SignUpCubit>().passwordChanged(password),
-          obscureText: true,
-          decoration: InputDecoration(
-            labelText: 'password',
-            helperText: '',
-            errorText: state.password.invalid ? 'invalid password' : null,
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _ConfirmPasswordInput extends StatelessWidget {
+class _PhoneNumberInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<SignUpCubit, SignUpState>(
       buildWhen: (previous, current) =>
-          previous.password != current.password ||
-          previous.confirmedPassword != current.confirmedPassword,
+          previous.phoneNumber != current.phoneNumber,
       builder: (context, state) {
         return TextField(
-          key: const Key('signUpForm_confirmedPasswordInput_textField'),
-          onChanged: (confirmPassword) => context
-              .read<SignUpCubit>()
-              .confirmedPasswordChanged(confirmPassword),
-          obscureText: true,
+          key: const Key('signUpForm__phoneNumberInput_textField'),
+          onChanged: (phoneNumber) =>
+              context.read<SignUpCubit>().phoneNumberChanged(phoneNumber),
+          keyboardType: TextInputType.phone,
           decoration: InputDecoration(
-            labelText: 'confirm password',
+            labelText: 'phone number',
             helperText: '',
-            errorText: state.confirmedPassword.invalid
-                ? 'passwords do not match'
-                : null,
+            errorText:
+                state.phoneNumber.invalid ? 'invalid phone number' : null,
           ),
         );
       },

@@ -10,7 +10,7 @@ import 'package:meta/meta.dart';
 class SignUpFailure implements Exception {}
 
 /// Thrown during the login process if a failure occurs.
-class LogInWithEmailAndPasswordFailure implements Exception {}
+class LogInWithPhoneNumberFailure implements Exception {}
 
 /// Thrown during the sign in with google process if a failure occurs.
 class LogInWithGoogleFailure implements Exception {}
@@ -38,6 +38,14 @@ class AuthenticationRepository {
   @visibleForTesting
   bool isWeb = kIsWeb;
 
+  StreamController<String> _verifcationController = StreamController<String>();
+  StreamSink<String> get _inAddVerificationId => _verifcationController.sink;
+  Stream<String> get verificationId => _verifcationController.stream;
+
+  void dispose() {
+    _verifcationController.close();
+  }
+
   /// Stream of [User] which will emit the current user when
   /// the authentication state changes.
   ///
@@ -58,12 +66,12 @@ class AuthenticationRepository {
   /// Creates a new user with the provided [email] and [password].
   ///
   /// Throws a [SignUpFailure] if an exception occurs.
-  Future<void> signUp({required String email, required String password}) async {
+  Future<void> signUp(
+      {required String phoneNumber, required String name}) async {
     try {
-      await _firebaseAuth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      await logInWithPhoneNumber(phoneNumber: phoneNumber);
+      //final String userId = currentUser.id;
+      //print(userId);
     } on Exception {
       throw SignUpFailure();
     }
@@ -99,17 +107,41 @@ class AuthenticationRepository {
   /// Signs in with the provided [email] and [password].
   ///
   /// Throws a [LogInWithEmailAndPasswordFailure] if an exception occurs.
-  Future<void> logInWithEmailAndPassword({
-    required String email,
-    required String password,
+  Future<void> logInWithPhoneNumber({
+    required String phoneNumber,
   }) async {
     try {
-      await _firebaseAuth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
+      await _firebaseAuth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted:
+            (firebase_auth.PhoneAuthCredential credential) async {
+          await _firebaseAuth.signInWithCredential(credential);
+        },
+        verificationFailed: (firebase_auth.FirebaseAuthException e) {
+          if (e.code == 'invalid-phone-number') {
+            print('Incorrect phone number.');
+          }
+        },
+        codeSent: (String verificationId, int? resendToken) async {
+          _inAddVerificationId.add(verificationId);
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {},
       );
     } on Exception {
-      throw LogInWithEmailAndPasswordFailure();
+      throw LogInWithPhoneNumberFailure();
+    }
+  }
+
+  Future<void> logInWithOtp(
+      {required String verificationId, required String smsCode}) async {
+    try {
+      firebase_auth.PhoneAuthCredential credential =
+          firebase_auth.PhoneAuthProvider.credential(
+              verificationId: verificationId, smsCode: smsCode);
+
+      await _firebaseAuth.signInWithCredential(credential);
+    } on Exception {
+      throw LogInWithPhoneNumberFailure();
     }
   }
 
